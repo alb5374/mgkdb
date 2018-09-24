@@ -3,19 +3,14 @@
 """
 File handling script for formatting output files, getting file lists, and
 reading and writing to database containing:
-    format_energy(filepath):            input filepath, return formatted GENE energy 
-                                          output formatted energy file (header removed)
-    format_nrg(filepath):               input filepath, return formatted GENE nrg output
-                                          files ### currently only for n_spec=1 ###
     get_file_list(out_dir,begin):       input GENE output directory and base filepath 
-                                          (nrg, energy, etc), return full list of files 
-                                          in directory
-    get_formatted_list(out_dir,begin):  input GENE output directory and base filepath 
-                                          (nrg, energy) of formatted files, return full 
-                                          list of formatted files in directory
+                                           (nrg, energy, etc), return full list of files 
+                                           in directory
+    get_extensions(out_dir):            input GENE output directory, return list of run 
+                                           extensions in the directory
     gridfs_put(filepath):               input filepath, upload  file to database, and 
-                                          return object_id of uploaded file
-    gridfs_read(db_file):              input database filename, return contents of file
+                                           return object_id of uploaded file
+    gridfs_read(db_file):               input database filename, return contents of file
         
 
 @author: Austin Blackmon
@@ -25,77 +20,35 @@ from pymongo import MongoClient
 import gridfs
 import os
 import numpy as np
-
-def format_energy(filepath):
-    #open files to fix columns
-    energyFile = open(filepath, 'r')
-    filepath_split = filepath.split('\\')
-    energyFormattedFile = open(filepath_split[0] + '\\formatted_' + filepath_split[1],'w')
-    
-    #edit energy(...) file and write to energy(...)_formatted
-    with energyFile as f:
-        for count, line in enumerate(f, start=1):
-
-            #grab time from odd number lines
-            if count > 15:
-                energyFormattedFile.write(line)
-
-    #close files to fix columns
-    energyFile.close()
-    energyFormattedFile.close()
-
-def format_nrg(filepath):
-    #open files to fix columns
-    nrgFile = open(filepath, 'r')
-    filepath_split = filepath.split('\\')
-    nrgFormattedFile = open(filepath_split[0] + '\\formatted_' + filepath_split[-1],'w')
-    
-    #edit nrg(...) file and write to nrg(...)_formatted
-    with nrgFile as f:
-        for count, line in enumerate(f, start=1):
-
-            #grab time from odd number lines
-            if count % 2 == 1:
-                time = line.replace('\n','')
-
-            #add time to lines of data on even numbered lines
-            else:
-                line_data = line
-                line = time + line_data
-                line = line.replace('     ', '')
-                nrgFormattedFile.write(line)
-
-    #close files to fix columns
-    nrgFile.close()
-    nrgFormattedFile.close()
+from ParIO import * 
 
 def get_file_list(out_dir,begin):
     files_list = []
-    count = 0
-    filetypes = ('.ps','.png')
     
-    #scan files in GENE output directory
+    #unwanted filetype extensions for general list
+    bad_ext = ('.ps','.png')
+    
+    #scan files in GENE output directory, ignoring files in '/in_par', and return list
     for dirpath, dirnames, files in os.walk(out_dir):
-        for name in files:
+        for count, name in enumerate(files, start=0):
             if name.lower().startswith(begin) and name.find('in_par') == -1  \
-            and name.endswith(filetypes) == False:
+            and name.endswith(bad_ext) == False:
                 files = os.path.join(dirpath, name)
                 files_list.append(files)
-                count = count + 1
-    return files_list
-  
-def get_formatted_list(out_dir,begin):
-    files_list = []
-    count = 0
+                
+    return files_list     
+
+
+def get_extensions(out_dir):
+    extensions = []
     
-    #scan files
+    #scan files in GENE output directory, find all run extensions, return as list
     for dirpath, dirnames, files in os.walk(out_dir):
-        for name in files:
-            if name.lower().startswith(begin):
-                files = os.path.join(dirpath, name)
-                files_list.append(files)
-                count = count + 1
-    return files_list          
+        for count, name in enumerate(files, start=0):
+            if name.lower().startswith('codemods'):
+                extension = name.split('_',1)[1]
+                extensions.append(extension)
+    return extensions
 
 def gridfs_put(filepath):
     #set directory and filepath
