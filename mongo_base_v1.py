@@ -95,8 +95,6 @@ vsp_id = 'None'
 omega_id = 'None'
 s_alpha_id = 'None'
 diagnostics_id = 'None'
-### USE DICTIONARY ###
-
 
 #for linear runs
 if linear:
