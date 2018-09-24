@@ -131,7 +131,7 @@ if linear:
         params = find_params(out_dir + '\\parameters_' + extension)
         kx = params[0]
         ky = params[1]
-        omn = params[2]  # check n_spec for suffix
+        omn = params[2]
         omt = params[3]
         
         
