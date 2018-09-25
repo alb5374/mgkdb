@@ -50,18 +50,18 @@ s_alpha_files = get_file_list(out_dir, 's_alpha')
 scanlog_files = get_file_list(out_dir, 'scan')
 vsp_files = get_file_list(out_dir, 'vsp')
 
-#format 'energy' and 'nrg' files and get formatted file lists
-for files in energy_files:
-    format_energy(files)
-for files in nrg_files:
-    format_nrg(files)
-formatted_energy_files = get_file_list(out_dir, 'formatted_energy')
-formatted_nrg_files = get_file_list(out_dir, 'formatted_nrg')
+##format 'energy' and 'nrg' files and get formatted file lists
+#for files in energy_files:
+#    format_energy(files)
+#for files in nrg_files:
+#    format_nrg(files)
+#formatted_energy_files = get_file_list(out_dir, 'formatted_energy')
+#formatted_nrg_files = get_file_list(out_dir, 'formatted_nrg')
 
 #list of all GENE output files to be uploaded
 output_files = autopar_files + codemods_files + energy_files + \
-    formatted_energy_files + field_files + geneerr_files + \
-    mom_files + nrg_files + formatted_nrg_files + omega_files + \
+     field_files + geneerr_files + \
+    mom_files + nrg_files +  omega_files + \
     parameters_files + s_alpha_files + scanlog_files + vsp_files
 
 #upload all GENE output files to database
@@ -100,35 +100,35 @@ diagnostics_id = 'None'
 
 #for linear runs
 if linear:
-    extensions = get_extensions(out_dir)
-    for extension in extensions:
+    suffixes = get_suffixes(out_dir)
+    for suffix in suffixes:
         for line in object_ids:
-            if line.find('codemods_' + extension) != -1:
+            if line.find('codemods_' + suffix) != -1:
                 codemods_id = line.split()[0]
-            if line.find('parameters_' + extension) != -1:
+            if line.find('parameters_' + suffix) != -1:
                 parameters_id = line.split()[0]
-            if line.find('autopar_' + extension) != -1:
+            if line.find('autopar_' + suffix) != -1:
                 autopar_id = line.split()[0]
-            if line.find('energy_' + extension) != -1 \
+            if line.find('energy_' + suffix) != -1 \
             and line.find('formatted') == -1:
                 energy_id = line.split()[0]
-            if line.find('formatted_energy_' + extension) != -1:
+            if line.find('formatted_energy_' + suffix) != -1:
                 formatted_energy_id = line.split()[0]
-            if line.find('nrg_' + extension) != -1 \
+            if line.find('nrg_' + suffix) != -1 \
             and line.find('formatted') == -1 :
                 nrg_id = line.split()[0]
-            if line.find('formatted_nrg_' + extension) != -1:
+            if line.find('formatted_nrg_' + suffix) != -1:
                 formatted_nrg_id = line.split()[0]
-            if line.find('omega_' + extension) != -1:
+            if line.find('omega_' + suffix) != -1:
                 omega_id = line.split()[0]
             if line.find('scan.log') != -1:
                 scanlog_id = line.split()[0]
-            if line.find('s_alpha_' + extension) != -1:
+            if line.find('s_alpha_' + suffix) != -1:
                 s_alpha_id = line.split()[0]
 
         #find relevant parameters from in/output
-        gamma = find_gamma(out_dir + '\\omega_' + extension)
-        params = find_params(out_dir + '\\parameters_' + extension)
+        gamma = find_gamma(out_dir + '\\omega_' + suffix)
+        params = find_params(out_dir + '\\parameters_' + suffix)
         kx = params[0]
         ky = params[1]
         omn = params[2]  # check n_spec for suffix
@@ -138,7 +138,7 @@ if linear:
         #document format for linear runs  
         run_data = {"user": user,
                     "run_collection_name": out_dir,
-                    "run_extension": out_dir + '_' + extension,
+                    "run_suffix": out_dir + '_' + suffix,
                     "keywords": keywords,
                     "codemods": codemods_id,
                     "submitcmd": submit_id,
@@ -168,49 +168,49 @@ if linear:
                 
                 
 #if linear:
-#    extensions = get_extensions(out_dir)
-#    for extension in extensions:
+#    suffixes = get_suffixes(out_dir)
+#    for suffix in suffixes:
 #        for line in object_ids:
 
 ########### WHY IS ONLY 1 NONLIN RUN BEING UPLOADED?!?!?!?! #############
 
 #for nonlinear runs
 if not linear:
-    extensions = get_extensions(out_dir)
-    for extension in extensions:
+    suffixes = get_suffixes(out_dir)
+    for suffix in suffixes:
         for line in object_ids:
-            if line.find('codemods_' + extension) != -1:
+            if line.find('codemods_' + suffix) != -1:
                 codemods_id = line.split()[0]
-            if line.find('parameters_' + extension) != -1:
+            if line.find('parameters_' + suffix) != -1:
                 parameters_id = line.split()[0]
-            if line.find('autopar_' + extension) != -1:
+            if line.find('autopar_' + suffix) != -1:
                 autopar_id = line.split()[0]
-            if line.find('energy_' + extension) != -1 \
+            if line.find('energy_' + suffix) != -1 \
             and line.find('formatted') == -1:
                 energy_id = line.split()[0]
-            if line.find('formatted_energy_' + extension) != -1:
+            if line.find('formatted_energy_' + suffix) != -1:
                 formatted_energy_id = line.split()[0]
-            if line.find('nrg_' + extension) != -1 \
+            if line.find('nrg_' + suffix) != -1 \
             and line.find('formatted') == -1 :
                 nrg_id = line.split()[0]
-            if line.find('formatted_nrg_' + extension) != -1:
+            if line.find('formatted_nrg_' + suffix) != -1:
                 formatted_nrg_id = line.split()[0]
-            if line.find('omega_' + extension) != -1:
+            if line.find('omega_' + suffix) != -1:
                 omega_id = line.split()[0]
             if line.find('scan.log') != -1:
                 scanlog_id = line.split()[0]
-            if line.find('s_alpha_' + extension) != -1:
+            if line.find('s_alpha_' + suffix) != -1:
                 s_alpha_id = line.split()[0]
-            if line.find('field_' + extension) != -1:
+            if line.find('field_' + suffix) != -1:
                 field_id = line.split()[0]
-            if line.find('mom_' + extension) != -1:
+            if line.find('mom_' + suffix) != -1:
                 mom_id = line.split()[0]
-            if line.find('vsp_' + extension) != -1:
+            if line.find('vsp_' + suffix) != -1:
                 vsp_id = line.split()[0]
                 
         #find relevant parameters from in/output
-        Qes = get_Qes(out_dir, extension)
-        params = find_params(out_dir + '\\parameters_' + extension)
+        Qes = get_Qes(out_dir, suffix)
+        params = find_params(out_dir + '\\parameters_' + suffix)
         kx = params[0]
         ky = params[1]
         omn = params[2]  # check n_spec for suffix
@@ -219,7 +219,7 @@ if not linear:
         #document format for nonlinear runs
         run_data = {"user": user,
                     "run_collection_name": out_dir,
-                    "run_extension": '_' + extension,
+                    "run_suffix": '_' + suffix,
                     "keywords": keywords,                          
                     "codemods": codemods_id,
                     "submitcmd": submit_id,
@@ -243,11 +243,4 @@ if not linear:
                    }
         
         #insert run_data into database
-        runs.insert_one(run_data).inserted_id
-        print(extension,line)
-########################
-
-# HOW TO INTEGRATE ADIOS??!?!
-
-#########################
-                
+        runs.insert_one(run_data).inserted_id                
