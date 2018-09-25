@@ -95,8 +95,6 @@ vsp_id = 'None'
 omega_id = 'None'
 s_alpha_id = 'None'
 diagnostics_id = 'None'
-### USE DICTIONARY ###
-
 
 #for linear runs
 if linear:
@@ -131,7 +129,7 @@ if linear:
         params = find_params(out_dir + '\\parameters_' + suffix)
         kx = params[0]
         ky = params[1]
-        omn = params[2]  # check n_spec for suffix
+        omn = params[2]
         omt = params[3]
         
         
