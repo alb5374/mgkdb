@@ -99,7 +99,7 @@ def upload_to_mongo(out_dir, user, linear, confidence, input_heat, keywords):
         object_ids[i] = object_ids[i] + '    ' +  output_files[i]
     
     #connect to 'ETG' database, 'Runs' collection
-    runs = MongoClient().ETG.Runs
+#    runs = MongoClient().ETG.Runs
     
     ### USE DICTIONARY ###
     scan_id = 'None'
@@ -123,6 +123,7 @@ def upload_to_mongo(out_dir, user, linear, confidence, input_heat, keywords):
     
     #for linear runs
     if linear:
+        runs = MongoClient().ETG.LinearRuns
         suffixes = get_suffixes(out_dir)
         for suffix in suffixes:
             for line in object_ids:
@@ -184,6 +185,7 @@ def upload_to_mongo(out_dir, user, linear, confidence, input_heat, keywords):
     
     #for nonlinear runs
     if not linear:
+        runs = MongoClient().ETG.NonlinRuns
         suffixes = get_suffixes(out_dir)
         for suffix in suffixes:
             for line in object_ids:
@@ -246,3 +248,17 @@ def upload_to_mongo(out_dir, user, linear, confidence, input_heat, keywords):
             
             #insert run_data into database
             runs.insert_one(run_data).inserted_id                
+
+def isLinear(name):
+    if os.path.isfile(name + '\\parameters'):
+        par = Parameters()
+        par.Read_Pars(name + '\\parameters')
+        pars = par.pardict
+        linear = not pars['nonlinear']
+        return(linear)
+    elif name.find('linear') != -1:
+        linear = True 
+        return(linear)
+    elif name.find('nonlin') != -1:
+        linear = False
+        return(linear)
