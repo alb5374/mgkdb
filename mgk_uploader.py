@@ -36,15 +36,12 @@ keywords = 'ETG, pedestal, GENE, '
 #######################################################################
 
 #scan through a directory for more than one run
-if multiple_runs:
-    folder_list = []
-    
+if multiple_runs:    
     #scan through directory for run directories
     for dirpath, dirnames, files in os.walk(output_folder):
         for count, name in enumerate(dirnames, start=0):
             #make list of directories
             folder = os.path.join(name)
-            folder_list.append(folder)
             #check if run is linear or nonlinear
             linear = isLinear(name)
             if linear:
@@ -54,7 +51,7 @@ if multiple_runs:
             #add linear/nonlin to keywords
             keywords_lin = keywords + lin
             
-        #send run list to upload_to_mongo to be uploaded
+            #send run list to upload_to_mongo to be uploaded
             upload_to_mongo(folder, user, linear, confidence, input_heat, keywords_lin)
 
 #submit a single run
