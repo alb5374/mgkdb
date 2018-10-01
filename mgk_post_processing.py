@@ -246,4 +246,50 @@ def get_omega_from_field(out_dir, suffix):
         f.write(str(pars['kymin'])+'    '+str(gam_avg)+'    '+str(om_avg)+'\n')
         f.close()
 
+def plot_linear(out_dir,scan_param,frequency):
+     #style and adjustments
+    #plt.style.use('basic')
+    plt.gcf().subplots_adjust(bottom=0.2,left=0.2)
+    
+    #files to plot from
+    if scan_param == 'ky':
+        xlabel = r'$k_y$'
+    elif scan_param =='kx':
+        xlabel = r'$k_x$'
+    elif scan_param == 'TiTe':
+        xlabel = r'$T_i/T_e$'   
+    elif scan_param == 'omn':
+        xlabel = r'$\omega_n$'   
+    elif scan_param == 'omt':
+        xlabel = r'$\omega_T$'
+    
+    if frequency == 'gamma':
+        ylabel = r'$\gamma$'
+        column = (4)
+    if frequency == 'omega':
+        ylabel = r'$\omega$'
+        column = (5)
         
+    #formatting
+    titlesize=22
+    axissize=22
+    
+    x0 = np.genfromtxt(out_dir +'\\scan.log', usecols=(2), skip_header=1)
+    y0 = np.genfromtxt(out_dir +'\\scan.log', usecols=column, skip_header=1)    
+    plt.figure(figsize=(10,10))
+    plt.plot(x0,y0,color='#990099',label=out_dir,marker='*',ms='14',ls='-')
+    
+    #axis, title labels
+    plt.title(out_dir,y=1.02,fontsize=titlesize)
+    plt.xlabel(xlabel, fontsize=axissize)
+    plt.xticks(color='k', size=22)
+    plt.ylabel(ylabel, fontsize=axissize)
+    plt.yticks(color='k', size=22)
+    
+    #legend location
+    plt.legend(loc='best',numpoints=1,fontsize=14)
+    
+    #save and show
+    plt.savefig(out_dir + '\\' + scan_param + '_vs_' + frequency +'.png')
+    plt.savefig(out_dir + '\\' + scan_param + '_vs_' + frequency +'.svg')
+    plt.close()
