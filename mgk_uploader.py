@@ -16,6 +16,7 @@ from mgk_file_handling import *
 from ParIO import *
 import os
 
+
 ########################################################################
 
 user = 'A. Blackmon'
@@ -26,7 +27,7 @@ multiple_runs = True    ### Automate scanning through a directory of numerous ru
 if not multiple_runs:
     confidence = '5'     ### 1-10, 1: little confidence, 10: well checked ###
 else:
-    confidence = 'None'  ### Set if same for all runs, else set as 'None' ###
+    confidence = 'None'  ### Set if  same for all runs, else set as 'None' ###
     
 input_heat = 'None'      ### Set if input heat is known, else set as 'None' ###
     
@@ -40,7 +41,7 @@ if multiple_runs:
     #scan through directory for run directories
     for dirpath, dirnames, files in os.walk(output_folder):
         for count, name in enumerate(dirnames, start=0):
-            #make list of directories
+            #make   list of directories
             folder = os.path.join(name)
             #check if run is linear or nonlinear
             linear = isLinear(name)
@@ -62,5 +63,8 @@ else:
         lin = 'linear'
     else:
         lin = 'nonlin'
+    #add linear/nonlin to keywords
+    keywords_lin = keywords + lin
+    
     #send run to upload_to_mongo to be uploaded
-    upload_to_mongo(output_folder, user, linear, confidence, input_heat, keywords)
+    upload_to_mongo(output_folder, user, linear, confidence, input_heat, keywords_lin)

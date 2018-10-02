@@ -36,7 +36,7 @@ from sys import exit
 def get_nspec(out_dir,suffix):
     #grab parameters dictionary from ParIO.py - Parameters()
     par = Parameters()
-    par.Read_Pars(out_dir + '\\parameters_' + suffix)
+    par.Read_Pars(out_dir + '/parameters' + suffix)
     pars = par.pardict 
     
     #find 'n_spec' value in parameters dictionary
@@ -65,7 +65,7 @@ def get_nrg(out_dir, suffix):
     
     
     #open 'nrg' file
-    f=open(out_dir + '\\nrg_' + suffix,'r')
+    f=open(out_dir + '/nrg' + suffix,'r')
     nrg_in=f.read()
 
     #format 'nrg' file for reading
@@ -184,7 +184,7 @@ def get_quasilinear(filepath):
 def get_omega_from_field(out_dir, suffix):
     calc_from_apar=0
     par = Parameters()
-    par.Read_Pars(out_dir+'\\parameters_'+suffix)
+    par.Read_Pars(out_dir+'/parameters'+suffix)
     pars = par.pardict
     
     #find 'n_spec' value in parameters dictionary
@@ -245,7 +245,7 @@ def get_omega_from_field(out_dir, suffix):
     
     
     if output_zeros:
-        f=open(out_dir+'\\omega_'+suffix,'w')
+        f=open(out_dir+'/omega'+suffix,'w')
         f.write(str(pars['kymin'])+'    '+str(0.0)+'    '+str(0.0)+'\n')
         f.close()
     else:
@@ -256,7 +256,7 @@ def get_omega_from_field(out_dir, suffix):
         plt.legend(loc='upper left')
         plt.show()
     
-        f=open(out_dir+'\\omega_'+suffix,'w')
+        f=open(out_dir+'/omega'+suffix,'w')
         f.write(str(pars['kymin'])+'    '+str(gam_avg)+'    '+str(om_avg)+'\n')
         f.close()
 
@@ -290,8 +290,8 @@ def plot_linear(out_dir,scan_param,freq):
     plt.figure(figsize=(10,10))
     
     #grab scan_param column and freq column from 'scan.log'
-    x0 = np.genfromtxt(out_dir +'\\scan.log', usecols=(2), skip_header=1)
-    y0 = np.genfromtxt(out_dir +'\\scan.log', usecols=column, skip_header=1) 
+    x0 = np.genfromtxt(out_dir +'/scan.log', usecols=(2), skip_header=1)
+    y0 = np.genfromtxt(out_dir +'/scan.log', usecols=column, skip_header=1) 
     
     #plot
     plt.plot(x0,y0,color='#990099',label=out_dir,marker='*',ms='14',ls='-')
@@ -307,8 +307,8 @@ def plot_linear(out_dir,scan_param,freq):
     plt.legend(loc='best',numpoints=1,fontsize=14)
     
     #save and close figure
-    plt.savefig(out_dir + '\\' + scan_param + '_vs_' + frequency +'.png')
-    plt.savefig(out_dir + '\\' + scan_param + '_vs_' + frequency +'.svg')
+    plt.savefig(out_dir + '/' + scan_param + '_vs_' + frequency +'.png')
+    plt.savefig(out_dir + '/' + scan_param + '_vs_' + frequency +'.svg')
     plt.close()
     
     ### ADD PLOT MULTIPLE RUNS - AUTOMATE LABELING, COLORING, ETC ###
