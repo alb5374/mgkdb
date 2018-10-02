@@ -2,8 +2,18 @@
 # -*- coding: utf-8 -*-
 
 """
-Base script to handle uploading of GENE folders to database
-
+File handling script for formatting output files, getting file lists, and
+reading and writing to database containing:
+    get_file_list(out_dir,begin):       input GENE output directory and base filepath 
+                                           (nrg, energy, etc), return full list of files 
+                                           in directory
+    get_suffixes(out_dir):            input GENE output directory, return list of run 
+                                           suffixes in the directory
+    gridfs_put(filepath):               input filepath, upload  file to database, and 
+                                           return object_id of uploaded file
+    gridfs_read(db_file):               input database filename, return contents of file
+    upload_to_mongo   
+    isLinear
 @author: Austin Blackmon
 """
 
@@ -97,10 +107,7 @@ def upload_to_mongo(out_dir, user, linear, confidence, input_heat, keywords):
     #map from_output files to object ids
     for i in range(0,len(output_files)):
         object_ids[i] = object_ids[i] + '    ' +  output_files[i]
-    
-    #connect to 'ETG' database, 'Runs' collection
-#    runs = MongoClient().ETG.Runs
-    
+        
     ### USE DICTIONARY ###
     scan_id = 'None'
     scanlog_id = 'None'
@@ -111,18 +118,16 @@ def upload_to_mongo(out_dir, user, linear, confidence, input_heat, keywords):
     efit_id = 'None'
     autopar_id = 'None'
     energy_id = 'None'
-    formatted_energy_id = 'None'
     field_id = 'None'
     mom_id = 'None'
     nrg_id = 'None'
-    formatted_nrg_id = 'None'
     vsp_id = 'None'
     omega_id = 'None'
     s_alpha_id = 'None'
-    diagnostics_id = 'None'
     
     #for linear runs
     if linear:
+        #connect to 'ETG' database, 'LinearRuns' collection
         runs = MongoClient().ETG.LinearRuns
         suffixes = get_suffixes(out_dir)
         for suffix in suffixes:
@@ -157,22 +162,22 @@ def upload_to_mongo(out_dir, user, linear, confidence, input_heat, keywords):
             #document format for linear runs  
             run_data = {"user": user,
                         "run_collection_name": out_dir,
-                        "run_suffix": out_dir + '_' + suffix,
+                        "run_suffix": '_' + suffix,
                         "keywords": keywords,
-                        "codemods": codemods_id,
-                        "submitcmd": submit_id,
                         "confidence": confidence,
-                        "parameters": parameters_id,
-                        "eqdisk": eqdisk_id,
-                        "efit": efit_id,
-                        "autopar": autopar_id,
-                        "energy": energy_id,
-                        "field": field_id,
-                        "mom": mom_id,
-                        "nrg": nrg_id,
-                        "omega": omega_id,
-                        "scanlog": scanlog_id,
-                        "vsp": vsp_id,
+                        "codemods_id": codemods_id,
+                        "submitcmd_id": submit_id,
+                        "parameters_id": parameters_id,
+                        "eqdisk_id": eqdisk_id,
+                        "efit_id": efit_id,
+                        "autopar_id": autopar_id,
+                        "energy_id": energy_id,
+                        "field_id": field_id,
+                        "mom_id": mom_id,
+                        "nrg_id": nrg_id,
+                        "omega_id": omega_id,
+                        "scanlog_id": scanlog_id,
+                        "vsp_id": vsp_id,
                         "gamma": gamma,
                         "omega": omega,
                         "ky": ky,
@@ -185,6 +190,7 @@ def upload_to_mongo(out_dir, user, linear, confidence, input_heat, keywords):
     
     #for nonlinear runs
     if not linear:
+        #connect to 'ETG' database, 'NonlinRuns' collection
         runs = MongoClient().ETG.NonlinRuns
         suffixes = get_suffixes(out_dir)
         for suffix in suffixes:
@@ -224,21 +230,21 @@ def upload_to_mongo(out_dir, user, linear, confidence, input_heat, keywords):
             run_data = {"user": user,
                         "run_collection_name": out_dir,
                         "run_suffix": '_' + suffix,
-                        "keywords": keywords,                          
-                        "codemods": codemods_id,
-                        "submitcmd": submit_id,
-                        "confidence": confidence,
-                        "parameters": parameters_id,
-                        "eqdisk": eqdisk_id,
-                        "efit": efit_id,
-                        "autopar": autopar_id,
-                        "energy": energy_id,
-                        "field": field_id,
-                        "mom": mom_id,
-                        "nrg": nrg_id,
-                        "omega":omega_id,
-                        "scanlog": scanlog_id,
-                        "vsp": vsp_id,
+                        "keywords": keywords,
+                        "confidence": confidence,                       
+                        "codemods_id": codemods_id,
+                        "submitcmd_id": submit_id,
+                        "parameters_id": parameters_id,
+                        "eqdisk_id": eqdisk_id,
+                        "efit_id": efit_id,
+                        "autopar_id": autopar_id,
+                        "energy_id": energy_id,
+                        "field_id": field_id,
+                        "mom_id": mom_id,
+                        "nrg_id": nrg_id,
+                        "omega_id":omega_id,
+                        "scanlog_id": scanlog_id,
+                        "vsp_id": vsp_id,
                         "Qes" : Qes,
                         "ky" : ky,
                         "kx" : kx,

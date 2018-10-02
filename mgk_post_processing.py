@@ -348,7 +348,9 @@ def calc_gamma(out_dir,suffix,ncols=10):
     for i in range(ntime-1):
         if nspec > 1:
             i0=i+start_index
-            dlogdt[i,0]=0.5*(nrge[i0+1,0]-nrge[i0,0])/(time[i0+1]-time[i0])/(0.5*(nrge[i0+1,0]+nrge[i0,0]))    for i in range(5,10):
+            dlogdt[i,0]=0.5*(nrge[i0+1,0]-nrge[i0,0])/(time[i0+1]-time[i0])/(0.5*(nrge[i0+1,0]+nrge[i0,0]))    
+            
+    for i in range(1,10):
         avg_gr[i]=np.sum(dlogdt[:-1,i-5])/len(dlogdt[:-1,i-5])
  
     
@@ -382,8 +384,6 @@ def calc_gamma(out_dir,suffix,ncols=10):
     fit =  np.e**(2.0*avg_gr[0]*time[start_index:])*(nrgi[-1,0]/np.e**(2.0*avg_gr[0]*time[-1]))
     err = abs(np.sum(nrgi[start_index:,0]-fit[:])/np.sum(nrgi[start_index:,0]))
 
-    print "Calculated growth rate:",avg_gr[0]
-    print "Error:",err
     if err > 1.0e-2:
         plt.semilogy(time,nrgi[:,0],'-x')
         plt.semilogy(time[start_index-500:],np.e**(2.0*avg_gr[0]*time[start_index-500:])*(nrgi[-1,0]/np.e**(2.0*avg_gr[0]*time[-1])),'--',color='green')
