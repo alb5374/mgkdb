@@ -35,11 +35,12 @@ input_heat = 'None'      ### Set if input heat is known, else set as 'None' ###
 keywords = 'ETG, pedestal, GENE, '
 
 #######################################################################
-
+exclude = set(['in_par'])
 #scan through a directory for more than one run
 if multiple_runs:    
     #scan through directory for run directories
     for dirpath, dirnames, files in os.walk(output_folder):
+        dirnames[:] = [d for d in dirnames if d not in exclude]
         for count, name in enumerate(dirnames, start=0):
             #make   list of directories
             folder = os.path.join(name)
@@ -57,14 +58,16 @@ if multiple_runs:
 
 #submit a single run
 else: 
-    #check if run is linear or nonlinear
-    linear = isLinear(output_folder)
-    if linear:
-        lin = 'linear'
-    else:
-        lin = 'nonlin'
-    #add linear/nonlin to keywords
-    keywords_lin = keywords + lin
-    
-    #send run to upload_to_mongo to be uploaded
-    upload_to_mongo(output_folder, user, linear, confidence, input_heat, keywords_lin)
+    for dirpath, dirnames, files in os.walk(output_folder):
+        if str(dirpath).find('in_par') == -1 and str(files).find('parameters') != -1:
+            #check if run is linear or nonlinear
+            linear = isLinear(output_folder)
+            if linear:
+                lin = 'linear'
+            else:
+                lin = 'nonlin'
+            #add linear/nonlin to keywords
+            keywords_lin = keywords + lin
+            
+            #send run to upload_to_mongo to be uploaded
+            upload_to_mongo(output_folder, user, linear, confidence, input_heat, keywords_lin)
