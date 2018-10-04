@@ -35,15 +35,14 @@ input_heat = 'None'      ### Set if input heat is known, else set as 'None' ###
 keywords = 'ETG, pedestal, GENE, '
 
 #######################################################################
-exclude = set(['in_par'])
+
 #scan through a directory for more than one run
 if multiple_runs:    
     #scan through directory for run directories
-    for dirpath, dirnames, files in os.walk(output_folder):
-        dirnames[:] = [d for d in dirnames if d not in exclude]
-        for count, name in enumerate(dirnames, start=0):
-            #make   list of directories
-            folder = os.path.join(name)
+    dirnames = next(os.walk('.'))[1]
+    for count, name in enumerate(dirnames, start=0):
+        folder = os.path.join(name)
+        if not os.path.isdir('in_par'):
             #check if run is linear or nonlinear
             linear = isLinear(name)
             if linear:
