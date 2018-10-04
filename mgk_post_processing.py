@@ -31,7 +31,7 @@ from ParIO import *
 from finite_differences import *
 from sys import path
 from sys import exit
-
+import os
 
 def get_nspec(out_dir,suffix):
     #grab parameters dictionary from ParIO.py - Parameters()
@@ -320,18 +320,18 @@ def calc_gamma(out_dir,suffix,ncols=10):
     nspec = get_nspec(out_dir,suffix)
     
     if nspec == 2:
-        time,nrgi,nrge=get_nrg(out_dir,suffix,nspec,ncols)
+        time,nrgi,nrge=get_nrg(out_dir,suffix)
     elif nspec == 3:
-        time,nrgi,nrg2,nrge=get_nrg(out_dir,suffix,nspec,ncols)
+        time,nrgi,nrg2,nrge=get_nrg(out_dir,suffix)
     else:
-        time,nrgi = get_nrg(out_dir,suffix,nspec,ncols)
+        time,nrgi = get_nrg(out_dir,suffix)
 
     if nrgi[-1,0]/nrgi[-2,0] < 1.0e-10:
         nrgi=np.delete(nrgi,-1,0)
         if nspec > 1:
             nrge=np.delete(nrge,-1,0)
         time=np.delete(time,-1,0)
-
+################# AUTOMATE FINDING START TIME - INDEX AFTER D/DT >>>> 1 ####################
     start_time=time[-1]-2.0
     start_index=np.argmin(abs(time-start_time))
     ntime=len(time)-start_index
@@ -392,6 +392,208 @@ def calc_gamma(out_dir,suffix,ncols=10):
         if test=='y':
             return avg_gr[0]
         else:
-            return calc_gr(suffix,nspec=nspec,ncols=ncols)
+            return calc_gamma(out_dir, suffix)
     else:
         return avg_gr[0]
+def get_suffixes(out_dir):
+    suffixes = []
+    
+    #scan files in GENE output directory, find all run suffixes, return as list
+    files = next(os.walk(out_dir))[2]
+    for count, name in enumerate(files, start=0):
+        if name.startswith('parameters_'):
+            suffix = name.split('_',1)[1]
+            suffix = '_' + suffix
+            suffixes.append(suffix)
+        elif name.lower().startswith('parameters.dat'):
+            suffixes = ['.dat']                
+    return suffixes
+
+def scan_info(out_dir, suffix):
+    par = Parameters()
+    par.Read_Pars('parameters')
+    pars = par.pardict
+#    edge_opt = pars['edge_opt']
+#    print("edge_opt = ",edge_opt)
+#    numscan_tot = pars['scan_dims']
+    numscan = get_suffixes(out_dir)
+    numscan_tot = len(numscan)
+    scan_info = np.zeros((numscan_tot,14),dtype='float64')
+    
+    for i in range(numscan_tot):
+        par0 = Parameters()
+        print ("Analyzing ",suffix)
+        if os.path.isfile(out_dir + '/parameters' + suffix):
+            par0.Read_Pars(out_dir + '/parameters' + suffix)
+            pars0 = par0.pardict
+            nspec = pars0['n_spec']
+            print(pars0['kymin'])
+            scan_info[i,0] = pars0['kymin']
+            if 'x0' in pars0:
+                scan_info[i,1] = pars0['x0']
+            else:
+                scan_info[i,1] = pars['x0']
+            if 'kx_center' in pars0:
+                scan_info[i,2] = pars0['kx_center']
+            else:
+                scan_info[i,2] = 0.0
+            if 'n0_global' in pars0:
+                scan_info[i,3] = pars0['n0_global']
+            else:
+                scan_info[i,3] = np.nan
+        else:
+            par0.Read_Pars(out_dir + '/parameters' + suffix)
+            pars0 = par0.pardict
+            nspec = pars0['n_spec']
+            scan_info[i,0] = float(str(pars0['kymin']).split()[0])
+            scan_info[i,1] = float(str(pars0['x0']).split()[0])
+            if 'kx_center' in pars0:
+                scan_info[i,2] = float(str(pars0['kx_center']).split()[0])
+            else:
+                scan_info[i,2] = 0.0
+            if 'n0_global' in pars0:
+                scan_info[i,3] = pars0['n0_global']
+            else:
+                scan_info[i,3] = 0.0
+        if os.path.isfile(out_dir + '/omega' + suffix):
+            omega0 = np.genfromtxt(out_dir + '/omega' + suffix)
+            if omega0.any() and omega0[1] != 0.0:
+                scan_info[i,4]=omega0[1]
+                scan_info[i,5]=omega0[2]
+            elif True:
+                scan_info[i,4]=calc_gamma(out_dir, suffix)
+                scan_info[i,5]= 0.0
+                np.savetxt(out_dir + '/omega' + suffix,[scan_info[i,0],scan_info[i,4],np.nan])
+            else:
+                scan_info[i,4]=np.nan
+                scan_info[i,5]=np.nan
+        elif calc_grs and os.path.isfile(out_dir + '/nrg' + suffix):
+            scan_info[i,4]=calc_gamma(out_dir, suffix)
+            scan_info[i,5] = 0.0
+            np.savetxt(out_dir + 'omega' + suffix,[scan_info[i,0],scan_info[i,4],np.nan])
+        else:
+            scan_info[i,4]=np.nan
+            scan_info[i,5]=np.nan
+        
+        if os.path.isfile(out_dir + '/field' + suffix):
+            field = fieldfile(out_dir + '/field' + suffix,pars0)
+            #field.set_time(field.tfld[-1],len(field.tfld)-1)
+            field.set_time(field.tfld[-1])
+            fntot = field.nz*field.nx
+    
+            dz = float(2.0)/float(field.nz)
+            zgrid = np.arange(fntot)/float(fntot-1)*(2*field.nx-dz)-field.nx
+            zgrid0 = np.arange(field.nz)/float(field.nz-1)*(2.0-dz)-1.0
+            phi = np.zeros(fntot,dtype='complex128')
+            apar = np.zeros(fntot,dtype='complex128')
+            phikx = field.phi()[:,0,:]
+            aparkx = field.phi()[:,0,:]
+            phase_fac = -np.e**(-2.0*np.pi*(0.0+1.0J)*pars0['n0_global']*pars0['q0'])
+            for j in range(field.nx/2+1):
+                phi[(j+field.nx/2)*field.nz:(j+field.nx/2+1)*field.nz]=field.phi()[:,0,j]*phase_fac**j
+                if j < field.nx/2:
+                    phi[(field.nx/2-j-1)*field.nz : (field.nx/2-j)*field.nz ]=field.phi()[:,0,-1-j]*phase_fac**(-(j+1))
+                if pars0['n_fields']>1:
+                    apar[(j+field.nx/2)*field.nz:(j+field.nx/2+1)*field.nz]=field.apar()[:,0,j]*phase_fac**j
+                    if j < field.nx/2:
+                        apar[(field.nx/2-j-1)*field.nz : (field.nx/2-j)*field.nz ]=field.apar()[:,0,-1-j]*phase_fac**(-(j+1))
+        
+            zavg=np.sum(np.abs(phi)*np.abs(zgrid))/np.sum(np.abs(phi))
+            scan_info[i,6] = zavg
+            cfunc,zed,corr_len=my_corr_func_complex(phi,phi,zgrid,show_plot=False)
+            scan_info[i,7] = corr_len
+            parity_factor_apar = np.abs(np.sum(apar))/np.sum(np.abs(apar))
+            scan_info[i,8] = parity_factor_apar
+            parity_factor_phi = np.abs(np.sum(phi))/np.sum(np.abs(phi))
+            scan_info[i,9] = parity_factor_phi
+    
+            #KBM test with E||
+            gpars,geometry = read_geometry_local(pars0['magn_geometry'][1:-1]+'_' + suffix)
+            jacxB = geometry['gjacobian']*geometry['gBfield']
+            if scan_info[i,5] == scan_info[i,5]:
+                omega_complex = (scan_info[i,5]*(0.0+1.0J) + scan_info[i,4])
+                gradphi = fd_d1_o4(phi,zgrid)
+                for j in range(pars0['nx0']):
+                    gradphi[pars0['nz0']*j:pars0['nz0']*(j+1)] = gradphi[pars0['nz0']*j:pars0['nz0']*(j+1)]/jacxB[:]/np.pi
+                #plt.plot(gradphi)
+                #plt.plot(omega_complex*apar)
+                #plt.show()
+                diff = np.sum(np.abs(gradphi + omega_complex*apar))
+                phi_cont = np.sum(np.abs(gradphi))
+                apar_cont = np.sum(np.abs(omega_complex*apar))
+                scan_info[i,11] = diff/(phi_cont+apar_cont)
+                #print 'diff/abs',scan_info[i,10]
+            else:
+                scan_info[i,11] = np.nan
+            phi0 = np.empty(np.shape(phikx),dtype = 'complex') 
+            apar0 = np.empty(np.shape(aparkx),dtype = 'complex') 
+            #print "Shape of phikx",np.shape(phikx)
+            #print "Shape of zgrid",np.shape(zgrid)
+            #dummy = raw_input("Press any key:\n")
+            #if edge_opt > 0.0: 
+            #    for ix in range(len(phikx[0,:])):
+            #        phi0[:,ix] = remove_edge_opt_complex(phikx[:,ix],edge_opt)
+            #        apar0[:,ix] = remove_edge_opt_complex(aparkx[:,ix],edge_opt)
+            phi0 = phikx
+            apar0 = aparkx
+            #Calculate <gamma_HB> / gamma
+            geomfile = pars0['magn_geometry'][1:-1]+'_' + suffix
+            print("geomfile",geomfile)
+            zgrid_pp, Btheta_R, prefactor = get_abs_psi_prime(geomfile,'../rbsProfs',pars['x0'])
+            rbs = np.genfromtxt('../rbsProfs')
+            ind_rbs_x0 = np.argmin(abs(rbs[:,0]-pars['x0'])) 
+            gamma_HB_norm_x0 = rbs[ind_rbs_x0,9]
+            ind_z0 = np.argmin(abs(zgrid_pp)) 
+            prefactor_norm = prefactor/prefactor[ind_z0]
+            gamma_HB_theta = abs(gamma_HB_norm_x0*prefactor_norm)
+            #plt.plot(zgrid_pp,gamma_HB_theta)
+            #plt.xlabel(r'$z/\pi$',size=18)
+            #plt.ylabel(r'$\gamma_{HB}(c_s/a)$',size=18)
+            #plt.show()
+            gamma_HB_sum = 0.0
+            phi_sum = 0.0
+            for ix in range(len(phi0[0,:])):
+                gamma_HB_sum += np.sum(abs(phi0[:,ix])**2*gamma_HB_theta*geometry['gjacobian'])
+                phi_sum += np.sum(abs(phi0[:,ix])**2*geometry['gjacobian'])
+            gamma_HB_avg = gamma_HB_sum / phi_sum
+            scan_info[i,12] = gamma_HB_avg
+            #gamma_HB_theta = abs(gamma_HB_norm_x0*prefactor_norm)
+            #theta0 = (scan_info[i,2]/(pars0['shat']*pars0['kymin']*np.pi))
+            #if theta0 > 1.0:
+            #    theta0 -= 2.0
+            #ind_theta0 = np.argmin(abs(zgrid_pp-theta0)) 
+            #print 'kx_center',scan_info[i,2]
+            #print 'shat',pars0['shat']
+            #print 'kymin',pars0['kymin']
+            #print 'theta0',theta0
+            #print 'ind_theta0',ind_theta0
+            n_info[i,13] = np.min(gamma_HB_theta)
+        else:
+            scan_info[i,6] = np.nan
+            scan_info[i,7] = np.nan
+            scan_info[i,8] = np.nan
+            scan_info[i,9] = np.nan
+            scan_info[i,11] = np.nan
+            scan_info[i,12] = np.nan
+            scan_info[i,13] = np.nan
+    
+        if os.path.isfile(out_dir + 'nrg' + suffix):
+            if nspec==1:
+                tn,nrg1=get_nrg0('_' + suffix,nspec=nspec)
+                scan_info[i,10]=nrg1[-1,7]/abs(nrg1[-1,6])
+            elif nspec==2:
+                tn,nrg1,nrg2=get_nrg0('_' + suffix,nspec=nspec)
+                scan_info[i,10]=nrg2[-1,7]/(abs(nrg2[-1,6])+abs(nrg1[-1,6]))
+            elif nspec==3:
+                tn,nrg1,nrg2,nrg3=get_nrg0('_' + suffix,nspec=nspec)
+                scan_info[i,10]=nrg3[-1,7]/(abs(nrg3[-1,6])+abs(nrg1[-1,6]))
+            else:
+                sys.exit("Not ready for nspec>2")
+        else:
+            scan_info[i,10] = np.nan
+    
+    print(np.shape(scan_info))
+    
+    f=out_dir + '/scan_info.dat'
+    head = '1.kymin 2.x0 3.kx_center 4.n0_global 5.gamma(cs/a) 6.omega(cs/a) 7.<z> 8.lambda_z 9.parity(apar) 10.parity(phi) 11.QEM/QES 12.Epar cancelation 13.gamma_HB_avg 14.gamma_HB_min'
+    np.savetxt(f,scan_info, header = head)
