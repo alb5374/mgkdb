@@ -42,18 +42,18 @@ if multiple_runs:
     dirnames = next(os.walk('.'))[1]
     for count, name in enumerate(dirnames, start=0):
         folder = os.path.join(name)
-        if not os.path.isdir('in_par'):
-            #check if run is linear or nonlinear
-            linear = isLinear(name)
-            if linear:
-                lin = 'linear'
-            else:
-                lin = 'nonlin'
-            #add linear/nonlin to keywords
-            keywords_lin = keywords + lin
-            
-            #send run list to upload_to_mongo to be uploaded
-            upload_to_mongo(folder, user, linear, confidence, input_heat, keywords_lin)
+#        if not os.path.isdir('in_par'):
+        #check if run is linear or nonlinear
+        linear = isLinear(name)
+        if linear:
+            lin = 'linear'
+        else:
+            lin = 'nonlin'
+        #add linear/nonlin to keywords
+        keywords_lin = keywords + lin
+        
+        #send run list to upload_to_mongo to be uploaded
+        upload_to_mongo(folder, user, linear, confidence, input_heat, keywords_lin)
 
 #submit a single run
 else: 

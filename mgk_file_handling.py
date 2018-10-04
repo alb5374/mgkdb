@@ -178,6 +178,7 @@ def upload_to_mongo(out_dir, user, linear, confidence, input_heat, keywords):
                 ky = params[1]
                 omn = params[2]
                 omt = params[3]
+                scan_info(out_dir, suffix)
                 
                 
                 #document format for linear runs  
