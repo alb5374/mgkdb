@@ -5,7 +5,7 @@ MGKDB is written for Python 3.6, using Anaconda 1.6.  As of yet, no other versio
 
 ## **Instructions**
 1. Clone the repository.
-2. In mgk_uploader.py, you will find the code listed below, sectioned off by ####...####.  This section is where you can edit variables to fit your needs.  
+2. In mgk_uploader.py, you will find the code listed below, sectioned off by ####...####.  This section is where you edit variables to fit your needs.  
 	* ** *Required* ** fields are: ```user```, ```output_folder```, and ```multiple_runs```.  
 	* *Desired* fields are: ```input_heat```, ```confidence```, and ```keywords```.  
 		* ```input_heat```, in MW, is for simulations based on experiments with known input heat
