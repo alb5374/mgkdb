@@ -100,8 +100,18 @@ def isUploaded(out_dir,runs):
         runIn = run["run_collection_name"]
         return(runIn == out_dir)
 
+def update_mongo(out_dir,runs_coll):
+    fields = ["user", "run_collection_name" ,"run_suffix" ,"keywords", "confidence",                        "codemods_id", "submitcmd_id", "parameters_id", "eqdisk_id", "efit_id", "autopar_id", "energy_id", "nrg_id", "omega_id", "scanlog_id", "scaninfo_id", "Qes", "ky", "kx", "omt", "omn", "gamma"]
+    update_null = input('Would you like to update only "Null" fields?  (y/n)')
+    for field in fields:
+        if update_null == 'y' or update_null == 'Y':
+            key = 'None'
+        key = 'None'
+        runs_coll.find({field: key })
+        
+
 def get_object_ids(out_dir):
-    #generate file lists for relevant files
+        #generate file lists for relevant files
         autopar_files = get_file_list(out_dir, 'autopar')
         codemods_files = get_file_list(out_dir, 'codemods')
         energy_files = get_file_list(out_dir, 'energy')
@@ -110,11 +120,11 @@ def get_object_ids(out_dir):
         omega_files = get_file_list(out_dir, 'omega')
         parameters_files = get_file_list(out_dir, 'parameters')
         s_alpha_files = get_file_list(out_dir, 's_alpha')
-        scanlog_files = get_file_list(out_dir, 'scan')
+        scanlog_files = get_file_list(out_dir, 'scan.log')
+        scan_info_files = get_file_list(out_dir, 'scan_info.dat')
 
         #list of all GENE output files to be uploaded
-        output_files = autopar_files + codemods_files + energy_files + geneerr_files +  \
-            nrg_files +  omega_files + parameters_files + s_alpha_files + scanlog_files 
+        output_files = autopar_files + codemods_files + energy_files + geneerr_files +            nrg_files +  omega_files + parameters_files + s_alpha_files + scanlog_files +            scan_info_files
         
         #upload all GENE output files to database
         object_ids = [] 
@@ -127,48 +137,54 @@ def get_object_ids(out_dir):
         return object_ids
 
 def upload_to_mongo(out_dir, user, linear, confidence, input_heat, keywords):
+    #initialize files dictionary
+    files_dict =  {'scan_id': 'None', 
+                   'scanlog_id': 'None', 
+                   'scaninfo_id': 'None', 
+                   'codemods_id': 'None', 
+                   'submit_id': 'None', 
+                   'parameters_id': 'None', 
+                   'eqdisk_id': 'None', 
+                   'efit_id': 'None', 
+                   'autopar_id': 'None', 
+                   'energy_id': 'None', 
+                   'nrg_id': 'None', 
+                   'omega_id': 'None', 
+                   's_alpha_id': 'None'
+                  }
+
     #for linear runs
     if linear:
         #connect to 'ETG' database, 'LinearRuns' collection
-        runs = MongoClient().ETG.LinearRuns
-        if isUploaded(out_dir,runs):
-            print('Folder already uploaded')
+        runs_coll = MongoClient().ETG.LinearRuns
+        if isUploaded(out_dir, runs_coll):
+            update = input('Folder already uploaded, update the the runs? (y/n)')
+            if update == 'y' or update == 'Y':
+                update_mongo(out_dir, runs_coll)
         else:
-            object_ids = get_object_ids(out_dir)
-            
-            ### USE DICTIONARY ###
-            scan_id = 'None'
-            scanlog_id = 'None'
-            codemods_id = 'None'
-            submit_id = 'None'
-            parameters_id = 'None'
-            eqdisk_id = 'None'
-            efit_id = 'None'
-            autopar_id = 'None'
-            energy_id = 'None'
-            nrg_id = 'None'
-            omega_id = 'None'
-            s_alpha_id = 'None'
-            
+            scan_info(out_dir)
+            object_ids = get_object_ids(out_dir)            
             suffixes = get_suffixes(out_dir)
             for suffix in suffixes:
                 for line in object_ids:
                     if line.find('codemods' + suffix) != -1:
-                        codemods_id = line.split()[0]
+                        files_dict['codemods_id'] = line.split()[0]
                     if line.find('parameters' + suffix) != -1:
-                        parameters_id = line.split()[0]
+                        files_dict['parameters_id'] = line.split()[0]
                     if line.find('autopar' + suffix) != -1:
-                        autopar_id = line.split()[0]
+                        files_dict['autopar_id'] = line.split()[0]
                     if line.find('energy' + suffix) != -1:
-                        energy_id = line.split()[0]
+                        files_dict['energy_id'] = line.split()[0]
                     if line.find('nrg' + suffix) != -1:
-                        nrg_id = line.split()[0]
+                        files_dict['nrg_id'] = line.split()[0]
                     if line.find('omega' + suffix) != -1:
-                        omega_id = line.split()[0]
+                        files_dict['omega_id'] = line.split()[0]
                     if line.find('scan.log') != -1:
-                        scanlog_id = line.split()[0]
+                        files_dict['scanlog_id'] = line.split()[0]
+                    if line.find('scan_info.dat') != -1:
+                        files_dict['scaninfo_id'] = line.split()[0]
                     if line.find('s_alpha' + suffix) != -1:
-                        s_alpha_id = line.split()[0]
+                        files_dict['s_alpha_id'] = line.split()[0]
         
                 #find relevant parameters from in/output
                 gamma = find_omega(out_dir + '/omega' + suffix)[0]
@@ -178,78 +194,58 @@ def upload_to_mongo(out_dir, user, linear, confidence, input_heat, keywords):
                 ky = params[1]
                 omn = params[2]
                 omt = params[3]
-                scan_info(out_dir, suffix)
                 
                 
                 #document format for linear runs  
-                run_data = {"user": user,
-                            "run_collection_name": out_dir,
-                            "run_suffix": '' + suffix,
-                            "keywords": keywords,
-                            "confidence": confidence,
-                            "codemods_id": codemods_id,
-                            "submitcmd_id": submit_id,
-                            "parameters_id": parameters_id,
-                            "eqdisk_id": eqdisk_id,
-                            "efit_id": efit_id,
-                            "autopar_id": autopar_id,
-                            "energy_id": energy_id,
-                            "nrg_id": nrg_id,
-                            "omega_id": omega_id,
-                            "scanlog_id": scanlog_id,
-                            "gamma": gamma,
-                            "omega": omega,
-                            "ky": ky,
-                            "kx": kx,
-                            "omt": omt,
-                            "omn": omn
-                            }
+                run_data_dict = {"user": user,
+                                 "run_collection_name": out_dir,
+                                 "run_suffix": '' + suffix,
+                                 "keywords": keywords,
+                                 "confidence": confidence,
+                                 "gamma": gamma,
+                                 "omega": omega,
+                                 "ky": ky,
+                                 "kx": kx,
+                                 "omt": omt,
+                                 "omn": omn
+                                 }
+                
+                run_data =  {**run_data_dict, **files_dict}
+                
                 #insert run_data into database
-                runs.insert_one(run_data).inserted_id
+                runs_coll.insert_one(run_data).inserted_id
             print('Run collection \'' + out_dir + '\' uploaded succesfully.')
     
     #for nonlinear runs
     if not linear:
         #connect to 'ETG' database, 'NonlinRuns' collection
-        runs = MongoClient().ETG.NonlinRuns
-        if isUploaded(out_dir,runs):
-            return()
+        runs_coll = MongoClient().ETG.NonlinRuns
+        if isUploaded(out_dir,runs_coll):
+            print('Folder already uploaded')
         else:
             object_ids = get_object_ids(out_dir)
             
-            ### USE DICTIONARY ###
-            scan_id = 'None'
-            scanlog_id = 'None'
-            codemods_id = 'None'
-            submit_id = 'None'
-            parameters_id = 'None'
-            eqdisk_id = 'None'
-            efit_id = 'None'
-            autopar_id = 'None'
-            energy_id = 'None'
-            nrg_id = 'None'
-            omega_id = 'None'
-            s_alpha_id = 'None'
             suffixes = get_suffixes(out_dir)
             for suffix in suffixes:
-                for line in object_ids:
+                for line in object_ids:                   
                     if line.find('codemods' + suffix) != -1:
-                        codemods_id = line.split()[0]
+                        files_dict['codemods_id'] = line.split()[0]
                     if line.find('parameters' + suffix) != -1:
-                        parameters_id = line.split()[0]
+                        files_dict['parameters_id'] = line.split()[0]
                     if line.find('autopar' + suffix) != -1:
-                        autopar_id = line.split()[0]
+                        files_dict['autopar_id'] = line.split()[0]
                     if line.find('energy' + suffix) != -1:
-                        energy_id = line.split()[0]
+                        files_dict['energy_id'] = line.split()[0]
                     if line.find('nrg' + suffix) != -1:
-                        nrg_id = line.split()[0]
+                        files_dict['nrg_id'] = line.split()[0]
                     if line.find('omega' + suffix) != -1:
-                        omega_id = line.split()[0]
+                        files_dict['omega_id'] = line.split()[0]
                     if line.find('scan.log') != -1:
-                        scanlog_id = line.split()[0]
+                        files_dict['scanlog_id'] = line.split()[0]
+                    if line.find('scan_info.dat') != -1:
+                        files_dict['scaninfo_id'] = line.split()[0]
                     if line.find('s_alpha' + suffix) != -1:
-                        s_alpha_id = line.split()[0]
-
+                        files_dict['s_alpha_id'] = line.split()[0]
                         
                 #find relevant parameters from in/output
                 Qes = get_Qes(out_dir, suffix)
@@ -260,30 +256,22 @@ def upload_to_mongo(out_dir, user, linear, confidence, input_heat, keywords):
                 omt = params[3]
                 
                 #document format for nonlinear runs
-                run_data = {"user": user,
-                            "run_collection_name": out_dir,
-                            "run_suffix": '' + suffix,
-                            "keywords": keywords,
-                            "confidence": confidence,                       
-                            "codemods_id": codemods_id,
-                            "submitcmd_id": submit_id,
-                            "parameters_id": parameters_id,
-                            "eqdisk_id": eqdisk_id,
-                            "efit_id": efit_id,
-                            "autopar_id": autopar_id,
-                            "energy_id": energy_id,
-                            "nrg_id": nrg_id,
-                            "omega_id":omega_id,
-                            "scanlog_id": scanlog_id,
-                            "Qes" : Qes,
-                            "ky" : ky,
-                            "kx" : kx,
-                            "omt" : omt,
-                            "omn" : omn                            
-                           }
+                run_data_dict = {"user": user,
+                                 "run_collection_name": out_dir,
+                                 "run_suffix": '' + suffix,
+                                 "keywords": keywords,
+                                 "confidence": confidence,                       
+                                 "Qes" : Qes,
+                                 "ky" : ky,
+                                 "kx" : kx,
+                                 "omt" : omt,
+                                 "omn" : omn                            
+                                }
+                
+                run_data =  {**run_data_dict, **files_dict}
                 
                 #insert run_data into database
-                runs.insert_one(run_data).inserted_id
+                runs_coll.insert_one(run_data).inserted_id
             print('Run collection \'' + out_dir + '\' uploaded succesfully.')
 
 def upload_big(out_dir, linear):
