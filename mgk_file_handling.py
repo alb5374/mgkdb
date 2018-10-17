@@ -101,7 +101,7 @@ def isUploaded(out_dir,runs):
         return(runIn == out_dir)
 
 def update_mongo(out_dir,runs_coll):
-    fields = ["user", "run_collection_name" ,"run_suffix" ,"keywords", "confidence",                        "codemods_id", "submitcmd_id", "parameters_id", "eqdisk_id", "efit_id", "autopar_id", "energy_id", "nrg_id", "omega_id", "scanlog_id", "scaninfo_id", "Qes", "ky", "kx", "omt", "omn", "gamma"]
+    fields = ["user", "run_collection_name" ,"run_suffix" ,"keywords", "confidence", "codemods_id", "submitcmd_id", "parameters_id", "eqdisk_id", "efit_id", "autopar_id", "energy_id", "nrg_id", "omega_id", "scanlog_id", "scaninfo_id", "Qes", "ky", "kx", "omt", "omn", "gamma"]
     update_null = input('Would you like to update only "Null" fields?  (y/n)')
     for field in fields:
         if update_null == 'y' or update_null == 'Y':
@@ -124,7 +124,7 @@ def get_object_ids(out_dir):
         scan_info_files = get_file_list(out_dir, 'scan_info.dat')
 
         #list of all GENE output files to be uploaded
-        output_files = autopar_files + codemods_files + energy_files + geneerr_files +            nrg_files +  omega_files + parameters_files + s_alpha_files + scanlog_files +            scan_info_files
+        output_files = autopar_files + codemods_files + energy_files + geneerr_files + nrg_files + omega_files + parameters_files + s_alpha_files + scanlog_files + scan_info_files
         
         #upload all GENE output files to database
         object_ids = [] 
