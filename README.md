@@ -5,12 +5,15 @@ MGKDB is written for Python 3.6, using Anaconda 1.6.  As of yet, no other versio
 
 ## **Instructions**
 1. Clone the repository.
-2. In mgk_uploader.py, you will find the code listed below, sectioned off by ####...####.  This section is where you can edit variables to fit your needs.  
-	* ** *Required* ** fields are: ```user```, ```output_folder```, and ```multiple_runs```.  
+2. In mgk_uploader.py, you will find the code listed below, sectioned off by ####...####.  This section is where you edit variables to fit your needs.  
+	* ** *Required* ** fields are: ```user```, ```output_folder```, and ```multiple_runs```. 
+		* ```user```: your name.
+		* ```output_folder```: output folder where run(s) are located.  Use '.' if run folders are located in current working directory.
+		* ```multiple_runs```: True if uploading multiple sets of runs, False if uploading one set.
 	* *Desired* fields are: ```input_heat```, ```confidence```, and ```keywords```.  
-		* ```input_heat```, in MW, is for simulations based on experiments with known input heat
-		* ```confidence``` will allow MGKDB to guage the checks that went into setting up your simulation.  Low values are for simulations that were quickly thrown together, with little or no prior checks performed.  High values are for simulations for which a wide array of numerical and physical checks were performed
-		* ```keywords``` are very helpful to provide MGKDB with metadata and allows for smart searching through the database.  Please include as many as possible!
+		* ```input_heat```: in MW, is for simulations based on experiments with known input heat
+		* ```confidence```: will allow MGKDB to guage the checks that went into setting up your simulation.  Low values are for simulations that were quickly thrown together, with little or no prior checks performed.  High values are for simulations for which a wide array of numerical and physical checks were performed
+		* ```keywords```: are very helpful to provide MGKDB with metadata and allows for smart searching through the database.  Please include as many as possible!
 3. MGKDB will automate finding important parameters and upload them to the database.  A message will display if your run was uploaded successfully.  
 
 *Thank you for contributing!*
@@ -18,7 +21,7 @@ MGKDB is written for Python 3.6, using Anaconda 1.6.  As of yet, no other versio
 ########################################################################
 
 ### REQUIRED ###
-user = 'Your Name'
+user = 'A. Blackmon'
 output_folder = '.'     ### Set as '.' for current directory ###
 multiple_runs = True    ### Automate scanning through a directory of numerous runs ###
 #################
@@ -37,7 +40,7 @@ keywords = 'ETG, pedestal, GENE'  ### enter any relevant keywords, i.e., ETG, IT
 ## Future of MGKDB
 * Integration into GENE diagnostic tool
 * Intuitive interface for user access
-* 
+* Build simplified models of turbulence
 
 
 
