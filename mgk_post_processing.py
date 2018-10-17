@@ -313,88 +313,41 @@ def plot_linear(out_dir,scan_param,freq):
     
     ### ADD PLOT MULTIPLE RUNS - AUTOMATE LABELING, COLORING, ETC ###
 
-def calc_gamma(out_dir,suffix,ncols=10):
+def calc_gamma(out_dir,suffix):
     """dens,upar,tpar,tperp,Ges,Gem,Qes,Qem,Pes,Pem"""
-    
+    ncols=10
     #grab 'n_spec' from 'parameters'
     nspec = get_nspec(out_dir,suffix)
-    
+
     if nspec == 2:
         time,nrgi,nrge=get_nrg(out_dir,suffix)
     elif nspec == 3:
         time,nrgi,nrg2,nrge=get_nrg(out_dir,suffix)
     else:
         time,nrgi = get_nrg(out_dir,suffix)
-
-    if nrgi[-1,0]/nrgi[-2,0] < 1.0e-10:
-        nrgi=np.delete(nrgi,-1,0)
-        if nspec > 1:
-            nrge=np.delete(nrge,-1,0)
-        time=np.delete(time,-1,0)
-################# AUTOMATE FINDING START TIME - INDEX AFTER D/DT >>>> 1 ####################
-    start_time=time[-1]-2.0
-    start_index=np.argmin(abs(time-start_time))
-    ntime=len(time)-start_index
-
-    dlogdt=np.zeros((ntime,1))
-    for i in range(ntime-1):
-        i0=i+start_index
-        dlogdt[i,0]=0.5*(nrgi[i0+1,0]-nrgi[i0,0])/(time[i0+1]-time[i0])/(0.5*(nrgi[i0+1,0]+nrgi[i0,0]))
-    avg_gr=np.zeros(10)
-
-    for i in range(1):
-        avg_gr[i]=np.sum(dlogdt[:-1,i])/len(dlogdt[:-1,i])
-
-    for i in range(ntime-1):
-        if nspec > 1:
-            i0=i+start_index
-            dlogdt[i,0]=0.5*(nrge[i0+1,0]-nrge[i0,0])/(time[i0+1]-time[i0])/(0.5*(nrge[i0+1,0]+nrge[i0,0]))    
-            
-    for i in range(1,10):
-        avg_gr[i]=np.sum(dlogdt[:-1,i-5])/len(dlogdt[:-1,i-5])
- 
     
-    momname=list()
-    momname.append('ni')
-    momname.append('Tpar_i  ')
-    momname.append('Tperp_i ')
-    momname.append('Qes_i   ')
-    momname.append('Qem_i   ')
-    momname.append('ne      ')
-    momname.append('Tpar_e  ')
-    momname.append('Tperp_e ')
-    momname.append('Qes_e   ')
-    momname.append('Qem_e  ')
+    avg_gamma = np.zeros(10)
+    dlogdt=np.zeros((len(time),10))
+    ddt = [] 
+    
+    for j in range(0,10):
+        print(type(time))
+        for i in range(1, len(time)):
+            dlogdt[i]=0.5*(nrgi[-i,j]-nrgi[-i-1,j])/(float(time[-i])-float(time[-i-1]))/(0.5*(nrgi[-i,j]+nrgi[-i-1,j]))
+    
+            
+            ddt = dlogdt[dlogdt!=0]
+        for k in range(1, len(ddt)-1):
+            
+            if abs((ddt[k] - ddt[k+1])/ddt[k] ) > 0.005:
+                ntime = k-1
+                
+                break
+    
+        avg_gamma[j] = sum(ddt[0:ntime])/ntime
+ 
+        return avg_gamma
 
-    #print avg_gr
-    #print "Select growth rate to keep:"
-    #print "Average Growth Rates:"
-    #print "0:ni      ",avg_gr[0]
-    #print "1:Tpar_i  ",avg_gr[1]
-    #print "2:Tperp_i ",avg_gr[2]
-    #print "3:Qes_i   ",avg_gr[3]
-    #print "4:Qem_i   ",avg_gr[4]
-    #print "5:ne      ",avg_gr[5]
-    #print "6:Tpar_e  ",avg_gr[6]
-    #print "7:Tperp_e ",avg_gr[7]
-    #print "8:Qes_e   ",avg_gr[8]
-    #print "9:Qem_e  ",avg_gr[9]
-    #print "-1:none"
-
-    fit =  np.e**(2.0*avg_gr[0]*time[start_index:])*(nrgi[-1,0]/np.e**(2.0*avg_gr[0]*time[-1]))
-    err = abs(np.sum(nrgi[start_index:,0]-fit[:])/np.sum(nrgi[start_index:,0]))
-
-    if err > 1.0e-2:
-        plt.semilogy(time,nrgi[:,0],'-x')
-        plt.semilogy(time[start_index-500:],np.e**(2.0*avg_gr[0]*time[start_index-500:])*(nrgi[-1,0]/np.e**(2.0*avg_gr[0]*time[-1])),'--',color='green')
-        plt.show()
-        test = raw_input("Accept calculation? (y=yes)")
-        if test=='y':
-            return avg_gr[0]
-        else:
-            return calc_gamma(out_dir, suffix)
-    else:
-        return avg_gr[0]
 def get_suffixes(out_dir):
     suffixes = []
     
@@ -409,30 +362,70 @@ def get_suffixes(out_dir):
             suffixes = ['.dat']                
     return suffixes
 
-def scan_info(out_dir, suffix):
+def my_corr_func_complex(v1,v2,time,show_plot=False,v1eqv2=True):
+    dt=time[1]-time[0]
+    N=len(time)
+    cfunc=np.zeros(N,dtype='complex')
+    for i in range(N):
+        i0=i+1
+        cfunc[-i0]=np.sum(np.conj(v1[-i0:])*v2[:i0])
+    tau=np.arange(N)
+    tau=tau*dt
+    if v1eqv2:
+        cfunc=np.real(cfunc)
+    max_corr=max(np.abs(cfunc))
+    corr_time=0.0
+    i=0
+    print(cfunc)
+    while corr_time==0.0:
+        print(i)
+        if (abs(cfunc[i])-max_corr/np.e) > 0.0 and (abs(cfunc[i+1])-max_corr/np.e) <= 0.0:
+            
+            slope=(cfunc[i+1]-cfunc[i])/(tau[i+1]-tau[i])
+            zero=cfunc[i]-slope*tau[i]
+            corr_time=(max_corr/np.e-zero)/slope
+            print(corr_time)
+        i+=1
+    neg_loc = 10000.0
+    i=0
+    while neg_loc==10000.0 and i < N:
+        if cfunc[i] < 0.0:
+            neg_loc = tau[i]
+        i+=1
+
+    if neg_loc < corr_time:
+        print("WARNING: neg_loc < corr_time")
+        corr_time = neg_loc
+
+    if show_plot:
+        plt.plot(tau,cfunc,'x-')
+        ax=plt.axis()
+        plt.vlines(corr_time,ax[2],ax[3])
+        plt.show()
+    return cfunc,tau,corr_time
+
+def scan_info(out_dir):
     par = Parameters()
-    par.Read_Pars('parameters')
+    par.Read_Pars(out_dir + '/parameters')
     pars = par.pardict
-#    edge_opt = pars['edge_opt']
-#    print("edge_opt = ",edge_opt)
-#    numscan_tot = pars['scan_dims']
-    numscan = get_suffixes(out_dir)
-    numscan_tot = len(numscan)
-    scan_info = np.zeros((numscan_tot,14),dtype='float64')
+    suffixes = get_suffixes(out_dir)
+    numscan = len(suffixes)
+    scan_info = np.zeros((numscan,14),dtype='float64')
     
-    for i in range(numscan_tot):
+    for i in range(numscan):
+        suffix = suffixes[i]
         par0 = Parameters()
-        print ("Analyzing ",suffix)
         if os.path.isfile(out_dir + '/parameters' + suffix):
             par0.Read_Pars(out_dir + '/parameters' + suffix)
             pars0 = par0.pardict
             nspec = pars0['n_spec']
-            print(pars0['kymin'])
             scan_info[i,0] = pars0['kymin']
             if 'x0' in pars0:
                 scan_info[i,1] = pars0['x0']
-            else:
+            elif'x0' in pars:
                 scan_info[i,1] = pars['x0']
+            else:
+                break
             if 'kx_center' in pars0:
                 scan_info[i,2] = pars0['kx_center']
             else:
@@ -443,6 +436,7 @@ def scan_info(out_dir, suffix):
                 scan_info[i,3] = np.nan
         else:
             par0.Read_Pars(out_dir + '/parameters' + suffix)
+            print(out_dir + '/parameters' + suffix)
             pars0 = par0.pardict
             nspec = pars0['n_spec']
             scan_info[i,0] = float(str(pars0['kymin']).split()[0])
@@ -461,7 +455,7 @@ def scan_info(out_dir, suffix):
                 scan_info[i,4]=omega0[1]
                 scan_info[i,5]=omega0[2]
             elif True:
-                scan_info[i,4]=calc_gamma(out_dir, suffix)
+                scan_info[i,4]=calc_gamma(out_dir, suffix)[0]
                 scan_info[i,5]= 0.0
                 np.savetxt(out_dir + '/omega' + suffix,[scan_info[i,0],scan_info[i,4],np.nan])
             else:
@@ -477,7 +471,6 @@ def scan_info(out_dir, suffix):
         
         if os.path.isfile(out_dir + '/field' + suffix):
             field = fieldfile(out_dir + '/field' + suffix,pars0)
-            #field.set_time(field.tfld[-1],len(field.tfld)-1)
             field.set_time(field.tfld[-1])
             fntot = field.nz*field.nx
     
@@ -488,15 +481,16 @@ def scan_info(out_dir, suffix):
             apar = np.zeros(fntot,dtype='complex128')
             phikx = field.phi()[:,0,:]
             aparkx = field.phi()[:,0,:]
-            phase_fac = -np.e**(-2.0*np.pi*(0.0+1.0J)*pars0['n0_global']*pars0['q0'])
-            for j in range(field.nx/2+1):
-                phi[(j+field.nx/2)*field.nz:(j+field.nx/2+1)*field.nz]=field.phi()[:,0,j]*phase_fac**j
-                if j < field.nx/2:
-                    phi[(field.nx/2-j-1)*field.nz : (field.nx/2-j)*field.nz ]=field.phi()[:,0,-1-j]*phase_fac**(-(j+1))
-                if pars0['n_fields']>1:
-                    apar[(j+field.nx/2)*field.nz:(j+field.nx/2+1)*field.nz]=field.apar()[:,0,j]*phase_fac**j
+            if 'n0_global' in pars0:
+                phase_fac = -np.e**(-2.0*np.pi*(0.0+1.0J)*pars0['n0_global']*pars0['q0'])
+                for j in range(field.nx/2+1):
+                    phi[(j+field.nx/2)*field.nz:(j+field.nx/2+1)*field.nz]=field.phi()[:,0,j]*phase_fac**j
                     if j < field.nx/2:
-                        apar[(field.nx/2-j-1)*field.nz : (field.nx/2-j)*field.nz ]=field.apar()[:,0,-1-j]*phase_fac**(-(j+1))
+                        phi[(field.nx/2-j-1)*field.nz : (field.nx/2-j)*field.nz ]=field.phi()[:,0,-1-j]*phase_fac**(-(j+1))
+                    if pars0['n_fields']>1:
+                        apar[(j+field.nx/2)*field.nz:(j+field.nx/2+1)*field.nz]=field.apar()[:,0,j]*phase_fac**j
+                        if j < field.nx/2:
+                            apar[(field.nx/2-j-1)*field.nz : (field.nx/2-j)*field.nz ]=field.apar()[:,0,-1-j]*phase_fac**(-(j+1))
         
             zavg=np.sum(np.abs(phi)*np.abs(zgrid))/np.sum(np.abs(phi))
             scan_info[i,6] = zavg
@@ -515,25 +509,14 @@ def scan_info(out_dir, suffix):
                 gradphi = fd_d1_o4(phi,zgrid)
                 for j in range(pars0['nx0']):
                     gradphi[pars0['nz0']*j:pars0['nz0']*(j+1)] = gradphi[pars0['nz0']*j:pars0['nz0']*(j+1)]/jacxB[:]/np.pi
-                #plt.plot(gradphi)
-                #plt.plot(omega_complex*apar)
-                #plt.show()
                 diff = np.sum(np.abs(gradphi + omega_complex*apar))
                 phi_cont = np.sum(np.abs(gradphi))
                 apar_cont = np.sum(np.abs(omega_complex*apar))
                 scan_info[i,11] = diff/(phi_cont+apar_cont)
-                #print 'diff/abs',scan_info[i,10]
             else:
                 scan_info[i,11] = np.nan
             phi0 = np.empty(np.shape(phikx),dtype = 'complex') 
             apar0 = np.empty(np.shape(aparkx),dtype = 'complex') 
-            #print "Shape of phikx",np.shape(phikx)
-            #print "Shape of zgrid",np.shape(zgrid)
-            #dummy = raw_input("Press any key:\n")
-            #if edge_opt > 0.0: 
-            #    for ix in range(len(phikx[0,:])):
-            #        phi0[:,ix] = remove_edge_opt_complex(phikx[:,ix],edge_opt)
-            #        apar0[:,ix] = remove_edge_opt_complex(aparkx[:,ix],edge_opt)
             phi0 = phikx
             apar0 = aparkx
             #Calculate <gamma_HB> / gamma
@@ -546,10 +529,6 @@ def scan_info(out_dir, suffix):
             ind_z0 = np.argmin(abs(zgrid_pp)) 
             prefactor_norm = prefactor/prefactor[ind_z0]
             gamma_HB_theta = abs(gamma_HB_norm_x0*prefactor_norm)
-            #plt.plot(zgrid_pp,gamma_HB_theta)
-            #plt.xlabel(r'$z/\pi$',size=18)
-            #plt.ylabel(r'$\gamma_{HB}(c_s/a)$',size=18)
-            #plt.show()
             gamma_HB_sum = 0.0
             phi_sum = 0.0
             for ix in range(len(phi0[0,:])):
@@ -557,16 +536,6 @@ def scan_info(out_dir, suffix):
                 phi_sum += np.sum(abs(phi0[:,ix])**2*geometry['gjacobian'])
             gamma_HB_avg = gamma_HB_sum / phi_sum
             scan_info[i,12] = gamma_HB_avg
-            #gamma_HB_theta = abs(gamma_HB_norm_x0*prefactor_norm)
-            #theta0 = (scan_info[i,2]/(pars0['shat']*pars0['kymin']*np.pi))
-            #if theta0 > 1.0:
-            #    theta0 -= 2.0
-            #ind_theta0 = np.argmin(abs(zgrid_pp-theta0)) 
-            #print 'kx_center',scan_info[i,2]
-            #print 'shat',pars0['shat']
-            #print 'kymin',pars0['kymin']
-            #print 'theta0',theta0
-            #print 'ind_theta0',ind_theta0
             n_info[i,13] = np.min(gamma_HB_theta)
         else:
             scan_info[i,6] = np.nan
@@ -577,23 +546,21 @@ def scan_info(out_dir, suffix):
             scan_info[i,12] = np.nan
             scan_info[i,13] = np.nan
     
-        if os.path.isfile(out_dir + 'nrg' + suffix):
+        if os.path.isfile(out_dir + '/nrg' + suffix):
             if nspec==1:
-                tn,nrg1=get_nrg0('_' + suffix,nspec=nspec)
+                tn,nrg1=get_nrg(out_dir, suffix)
                 scan_info[i,10]=nrg1[-1,7]/abs(nrg1[-1,6])
             elif nspec==2:
-                tn,nrg1,nrg2=get_nrg0('_' + suffix,nspec=nspec)
+                tn,nrg1,nrg2=get_nrg(out_dir, suffix)
                 scan_info[i,10]=nrg2[-1,7]/(abs(nrg2[-1,6])+abs(nrg1[-1,6]))
             elif nspec==3:
-                tn,nrg1,nrg2,nrg3=get_nrg0('_' + suffix,nspec=nspec)
+                tn,nrg1,nrg2,nrg3=get_nrg(out_dir, suffix)
                 scan_info[i,10]=nrg3[-1,7]/(abs(nrg3[-1,6])+abs(nrg1[-1,6]))
             else:
                 sys.exit("Not ready for nspec>2")
         else:
             scan_info[i,10] = np.nan
-    
-    print(np.shape(scan_info))
-    
+       
     f=out_dir + '/scan_info.dat'
     head = '1.kymin 2.x0 3.kx_center 4.n0_global 5.gamma(cs/a) 6.omega(cs/a) 7.<z> 8.lambda_z 9.parity(apar) 10.parity(phi) 11.QEM/QES 12.Epar cancelation 13.gamma_HB_avg 14.gamma_HB_min'
     np.savetxt(f,scan_info, header = head)
