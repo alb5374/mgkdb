@@ -1,7 +1,21 @@
 # **MGKDB**
+### **What is MGKDB?**
 MGKDB is a tool for storing, accessing, and learning from a wealth of fusion results.  The main focus of MGKDB will be in the pedestal region of tokamaks, with a large portion of data coming from simulation results.  Currently, GENE is the only code compatible with the database, though compatibility with more codes will be added in the future.
 
-MGKDB is written for Python 3.6, using Anaconda 1.6.  As of yet, no other versions of Python or Anaconda have been tested.  Any other scritps necessary for running MGKDB are included in this repository.
+### **What does MGKDB look like?**
+MGKDB is structured using **MongoDB**.  MongoDB is a non-relational, sometimes referred to as NoSQL, database structure.  Relational databases, such as the common MySQL database, contains rigidly structure tables to store data.  Non-relational databases, including MongoDB, use a loose format for data collections, based on JSON formatting, meaning that each document (entry) in a collection can hold a unique structure.  MongoDB identifies each document with a unique object ID, given by "_id".  
+
+MGKDB uses **gridfs**, a MongoDB tool for uploading and storing files.  GridFS stores files in chunks, requiring a unique system for storage.  First, the file is broken into chunks.  A file-identifier document is then created in the collection *fs.files*, containing a unique "_id" and a "filepath" that dispalys the original filepath.  The chunks of the files are stored as documents in the collection *fs.chunks*.  All documents for chunks of one file receive unique "_id" values, but contain the same "files_id" value that calls back to the unique file-identifier "_id" value.
+
+An example MGKDB document is shown below.
+
+### **What was MGKDB developed with?**
+MGKDB is written for **Python 3.6** using **Anaconda 1.6** packages.  As of yet, no other versions of Python or Anaconda have been tested.  Any other scritps necessary for running MGKDB are included in this repository.
+
+## **File notation**
+* In MGKDB linear runs are labeled 'linear' and nonlinear runs are labeled 'nonlin.'
+* MGKDB refers to each folder of runs as a 'run collection.'  Upon submitting a folder to MGKDB, each run in the folder will be given a 'run_collection_name' value as the folder name.  It may be helpful to include 'linear' or 'nonlin' in the folder name.
+	* Runs in the folder are identified by their suffix, shown in MGKDB as "run_suffix."
 
 ## **Instructions**
 1. Clone the repository.
@@ -17,6 +31,7 @@ MGKDB is written for Python 3.6, using Anaconda 1.6.  As of yet, no other versio
 3. MGKDB will automate finding important parameters and upload them to the database.  A message will display if your run was uploaded successfully.  
 
 *Thank you for contributing!*
+### **Example mgk_uploader.py header**
 ```python 
 ########################################################################
 
@@ -28,19 +43,49 @@ multiple_runs = True    ### Automate scanning through a directory of numerous ru
 
 ### DESIRED ###
 if not multiple_runs:
-    confidence = ''     ### 1-10, 1: little confidence, 10: well checked ###
+    confidence = '8'     ### '1'-'10', '1': little confidence, '10': well checked ###
 else:
     confidence = 'None'  ### Set if  same for all runs, else set as 'None' ###
-input_heat = 'None'      ### Set if input heat is known, else set as 'None' ###
+input_heat = '15MW'      ### Set if input heat is known, else set as 'None' ###
 keywords = 'ETG, pedestal, GENE'  ### enter any relevant keywords, i.e., ETG, ITG, pedestal, core ###
 ###############
 
 ########################################################################
 ```
+### **Example MGKDB document**
+```json
+{
+"_id":"5bc7b6e55d25ca2a6cfdce5c",
+"user":"A. Blackmon",
+"run_collection_name":"78697.51005_sauter_linear_kyscan_r95",
+"run_suffix":"_0001",
+"keywords":"ETG, pedestal, GENE, linear",
+"confidence":"None",
+"gamma":0.11,
+"omega":-1.115,
+"ky":5,
+"kx":"None",
+"omt":3.4604,
+"omn":1.2798,
+"scan_id":"None",
+"scanlog_id":"5bc7b6e55d25ca2a6cfdce57",
+"scaninfo_id":"5bc7b6e55d25ca2a6cfdce5a",
+"codemods_id":"5bc7b6e25d25ca2a6cfdcd1e",
+"submit_id":"None",
+"parameters_id":"5bc7b6e45d25ca2a6cfdce1b",
+"eqdisk_id":"None",
+"efit_id":"None",
+"autopar_id":"None",
+"energy_id":"5bc7b6e35d25ca2a6cfdcd5a",
+"nrg_id":"5bc7b6e35d25ca2a6cfdcd99",
+"omega_id":"5bc7b6e45d25ca2a6cfdcddc",
+"s_alpha_id":"None"
+}
+```
 ## Future of MGKDB
 * Integration into GENE diagnostic tool
 * Intuitive interface for user access
-* Build simplified models of turbulence
+* Build simplified and/or quasilinear models of turbulence
 
 
 
