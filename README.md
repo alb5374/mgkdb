@@ -12,10 +12,12 @@ An example MGKDB document is shown below.
 ### **What was MGKDB developed with?**
 MGKDB is written for **Python 3.6** using **Anaconda 1.6** packages.  As of yet, no other versions of Python or Anaconda have been tested.  Any other scritps necessary for running MGKDB are included in this repository.
 
-## **File notation**
-* In MGKDB linear runs are labeled 'linear' and nonlinear runs are labeled 'nonlin.'
-* MGKDB refers to each folder of runs as a 'run collection.'  Upon submitting a folder to MGKDB, each run in the folder will be given a 'run_collection_name' value as the folder name.  It may be helpful to include 'linear' or 'nonlin' in the folder name.
-	* Runs in the folder are identified by their suffix, shown in MGKDB as "run_suffix."
+### **Naming conventions in MGKDB**
+* In MGKDB linear runs are labeled 'linear' and nonlinear runs are labeled 'nonlin'.
+* MGKDB refers to each folder of runs as a 'run collection'.  Upon submitting a folder to MGKDB, each run in the folder will be given a "run_collection_name" value, set as the folder name.  It may be helpful to include 'linear' or 'nonlin' in the folder name.
+	* All runs relating to each other should be kept in a single folder with suffixes to identify them, e.g., each run from a linear scan or continuations from checkpoints
+	* Runs in the folder are identified by their suffix, e.g. '_0005' or '_rho.95', shown in MGKDB as "run_suffix."
+
 
 ## **Instructions**
 1. Clone the repository.
@@ -27,8 +29,8 @@ MGKDB is written for **Python 3.6** using **Anaconda 1.6** packages.  As of yet,
 	* *Desired* fields are: ```input_heat```, ```confidence```, and ```keywords```.  
 		* ```input_heat```: in MW, is for simulations based on experiments with known input heat
 		* ```confidence```: will allow MGKDB to guage the checks that went into setting up your simulation.  Low values are for simulations that were quickly thrown together, with little or no prior checks performed.  High values are for simulations for which a wide array of numerical and physical checks were performed
-		* ```keywords```: are very helpful to provide MGKDB with metadata and allows for smart searching through the database.  Please include as many as possible!
-3. MGKDB will automate finding important parameters and upload them to the database.  A message will display if your run was uploaded successfully.  
+		* ```keywords```: are very helpful to provide MGKDB with metadata and allows for smart searching through the database.  MGKDB will automatically fill in 'linear' or 'nonlin'.  Please include as many relavent keywords as possible!
+3. Run mgk_uploader.py and MGKDB will automate finding parameters and quantities of interest and upload them to the database.  A message will display if your run was uploaded successfully.  If a document in MGKDB contains the same folder name, you will be prompted with whether you would like to remove the original document and reupload the folder or keep the folder already in MGKDB.  This is the current 'update' functionality, though proper update functionality is soon to come!
 
 *Thank you for contributing!*
 ### **Example mgk_uploader.py header**
