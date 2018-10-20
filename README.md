@@ -21,19 +21,19 @@ MGKDB is written for **Python 3.6** using **Anaconda 1.6** packages.  As of yet,
 
 ## **Instructions**
 1. Clone the repository.
-2. In mgk_uploader.py, you will find the code listed below, sectioned off by ####...####.  This section is where you edit variables to fit your needs.  
-	* ** *Required* ** fields are: ```user```, ```output_folder```, and ```multiple_runs```. 
+2. Open mgk_uploader.py.  Near the top you will find the code listed below, sectioned off by ####...####.  This section is where you edit variables to fit your needs.  
+	* ** *Required* ** fields are: ```user```, ```output_folder```, and ```multiple_runs``` 
 		* ```user```: your name.
 		* ```output_folder```: output folder where run(s) are located.  Use '.' if run folders are located in current working directory.
 		* ```multiple_runs```: True if uploading multiple sets of runs, False if uploading one set.
-	* *Desired* fields are: ```input_heat```, ```confidence```, and ```keywords```.  
-		* ```input_heat```: in MW, is for simulations based on experiments with known input heat
-		* ```confidence```: will allow MGKDB to guage the checks that went into setting up your simulation.  Low values are for simulations that were quickly thrown together, with little or no prior checks performed.  High values are for simulations for which a wide array of numerical and physical checks were performed
+	* *Desired* fields are: ```input_heat```, ```confidence```, and ```keywords```  
+		* ```input_heat```: in MW, is for simulations based on experiments with known input heat.
+		* ```confidence```: will allow MGKDB to guage the checks that went into setting up your simulation.  Low values are for simulations that were quickly thrown together, with little or no prior checks performed.  High values are for simulations for which a wide array of numerical and physical checks were performed.
 		* ```keywords```: are very helpful to provide MGKDB with metadata and allows for smart searching through the database.  MGKDB will automatically fill in 'linear' or 'nonlin'.  Please include as many relavent keywords as possible!
 3. Run mgk_uploader.py and MGKDB will automate finding parameters and quantities of interest and upload them to the database.  A message will display if your run was uploaded successfully.  If a document in MGKDB contains the same folder name, you will be prompted with whether you would like to remove the original document and reupload the folder or keep the folder already in MGKDB.  This is the current 'update' functionality, though proper update functionality is soon to come!
 
 *Thank you for contributing!*
-### **Example mgk_uploader.py header**
+### **Example mgk_uploader.py file**
 ```python 
 ########################################################################
 
