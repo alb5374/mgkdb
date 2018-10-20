@@ -9,8 +9,8 @@ MGKDB uses **gridfs**, a MongoDB tool for uploading and storing files.  GridFS s
 
 An example MGKDB document is shown below.
 
-### **What was MGKDB developed with?**
-MGKDB is written for **Python 3.6** using **Anaconda 1.6** packages.  As of yet, no other versions of Python or Anaconda have been tested.  Any other scritps necessary for running MGKDB are included in this repository.
+### **What is MGKDB being developed with?**
+MGKDB is being developed in **Python 3.6** using **Anaconda 1.6** packages.  As of yet, no other versions of Python or Anaconda have been tested.  Any other scritps necessary for running MGKDB are included in this repository.
 
 ### **Naming conventions in MGKDB**
 * In MGKDB linear runs are labeled 'linear' and nonlinear runs are labeled 'nonlin'.
